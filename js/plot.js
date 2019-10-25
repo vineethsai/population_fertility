@@ -34,11 +34,11 @@ window.onload = function () {
 // make scatter plot with trend line
 function makeScatterPlot(csvData) {
     // assign data as global variable; filter out unplottable values
-    data = csvData.filter((data) => {return data.fertility != "NA" && data.life_expectancy != "NA"})
+    data = csvData.filter((data) => {return data.fertility_rate != "NA" && data.life_expectancy != "NA"})
 
     let dropDown = d3.select("#filter").append("select")
-        .attr("location", "time");
-    
+        .attr("name", "year");
+
     // get arrays of fertility rate data and life Expectancy data
     let fertility_rate_data = data.map((row) => parseFloat(row["fertility_rate"]));
     let life_expectancy_data = data.map((row) => parseFloat(row["life_expectancy"]));
@@ -53,18 +53,18 @@ function makeScatterPlot(csvData) {
     plotData(mapFunctions);
 
     // draw title and axes labels
-    makeLabels(svgContainer, msm, "Countries by Life Expectancy and Fertility Rate",'Fertility Rates (Avg Children per Woman)','Life Expectancy (times)');
+    makeLabels(svgContainer, msm, "Countries by Life Expectancy and Fertility Rate",'Fertility Rates (Avg Children per Woman)','Life Expectancy (years)');
 
-    let distincttimes = [...new Set(data.map(d => d.time))];
-    let defaulttime = 2015;
+    let distinctYears = [...new Set(data.map(d => d.time))];
+    let defaultYear = 2013;
 
     let options = dropDown.selectAll("option")
-           .data(distincttimes)
+           .data(distinctYears)
            .enter()
            .append("option")
            .text(function (d) { return d; })
            .attr("value", function (d) { return d; })
-           .attr("selected", function(d){ return d == defaulttime; })
+           .attr("selected", function(d){ return d == defaultYear; })
            
     showCircles(dropDown.node());//this will filter initially
     dropDown.on("change", function() {
@@ -112,13 +112,11 @@ function makeLabels(svgContainer, msm, title, x, y) {
 // and add tooltip functionality
 function plotData(map) {
     // get population data as array
-    
     curData = data.filter((row) => {
-        return row.time == 1960 && row.fertility_rate != "NA" && row.life_expectancy != "NA"
+        return row.year == 1960 && row.fertility_rate != "NA" && row.life_expectancy != "NA"
     })
     let pop_data = data.map((row) => +row["pop_mlns"]);
     let pop_limits = d3.extent(pop_data);
-    console.log(pop_limits);
     // make size scaling function for population
     let pop_map_func = d3.scaleSqrt()
         .domain([pop_limits[0], pop_limits[1]])
@@ -156,12 +154,11 @@ function plotData(map) {
             div.transition()
                 .duration(200)
                 .style("opacity", .9);
-            // plotPopulation(d.country, toolChart)
-            div.html("Fertility_rate:       " + d.fertility_rate + "<br/>" +
-                    "Life Expectancy: " + d.life_expectancy + "<br/>" +
-                    "Population:      " + numberWithCommas(d["pop_mlns"]) + "<br/>" +
-                    "time:            " + d.time + "<br/>" +
-                    "Country:         " + d.location)
+                div.html("Fertility:       " + d.fertility_rate + "<br/>" +
+                        "Life Expectancy: " + d.life_expectancy + "<br/>" +
+                        "Population:      " + numberWithCommas(d["pop_mlns"]*1000000) + "<br/>" +
+                        "Year:            " + d.time + "<br/>" +
+                        "Country:         " + d.location)
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY - 28) + "px");
             
@@ -172,24 +169,6 @@ function plotData(map) {
                 .style("opacity", 0);
         });
 }
-
-// function plotPopulation(country, toolChart) {
-//     let countryData = data.filter((row) => {return row.country == country})
-//     let population = countryData.map((row) => parseInt(row["population"]));
-//     let time = countryData.map((row) => parseInt(row["time"]));
-
-//     let axesLimits = findMinMax(time, population);
-//     let mapFunctions = drawAxes(axesLimits, "time", "population", toolChart, small_msm);
-//     toolChart.append("path")
-//         .datum(countryData)
-//         .attr("fill", "none")
-//         .attr("stroke", "steelblue")
-//         .attr("stroke-width", 1.5)
-//         .attr("d", d3.line()
-//                     .x(function(d) { return mapFunctions.xScale(d.time) })
-//                     .y(function(d) { return mapFunctions.yScale(d.population) }))
-//     makeLabels(toolChart, small_msm, "Population Over Time For " + country, "time", "Population (in Millions)");
-// }
 
 // draw the axes and ticks
 function drawAxes(limits, x, y, svgContainer, msm) {
@@ -268,3 +247,22 @@ function findMinMax(x, y) {
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+// function plotPopulation(country, toolChart) {
+//     let countryData = data.filter((row) => {return row.country == country})
+//     let population = countryData.map((row) => parseInt(row["population"]));
+//     let time = countryData.map((row) => parseInt(row["time"]));
+
+//     let axesLimits = findMinMax(time, population);
+//     let mapFunctions = drawAxes(axesLimits, "time", "population", toolChart, small_msm);
+//     toolChart.append("path")
+//         .datum(countryData)
+//         .attr("fill", "none")
+//         .attr("stroke", "steelblue")
+//         .attr("stroke-width", 1.5)
+//         .attr("d", d3.line()
+//                     .x(function(d) { return mapFunctions.xScale(d.time) })
+//                     .y(function(d) { return mapFunctions.yScale(d.population) }))
+//     makeLabels(toolChart, small_msm, "Population Over Time For " + country, "time", "Population (in Millions)");
+// }
+
